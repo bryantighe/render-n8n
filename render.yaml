@@ -16,7 +16,7 @@ services:
     name: n8n-service
     env: docker
     dockerfilePath: ./Dockerfile
-    autoDeploy: true
+    autoDeploy: false
     #image:
     #  # Pulls the n8n image tagged as latest from Docker Hub
     #  url: docker.io/n8nio/n8n:latest
