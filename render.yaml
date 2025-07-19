@@ -16,9 +16,9 @@ services:
     name: n8n-service
     env: docker
     dockerfilePath: ./Dockerfile
-    image:
-      # Pulls the n8n image tagged as latest from Docker Hub
-      url: docker.io/n8nio/n8n:latest
+    #image:
+    #  # Pulls the n8n image tagged as latest from Docker Hub
+    #  url: docker.io/n8nio/n8n:latest
 
     # All environment variables defined below are required!
     #
