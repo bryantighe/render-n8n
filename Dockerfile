@@ -1,48 +1,52 @@
+# Stage 1: grab fontconfig + deps from Alpine
+FROM alpine:latest AS fontstage
+RUN apk add --no-cache fontconfig
+
+# Stage 2: keep n8n on latest
 FROM docker.n8n.io/n8nio/n8n:latest
 
 USER root
 
-# Install Chromium + fonts + fontconfig (Debian/Ubuntu-based)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  chromium \
-  ca-certificates \
-  fontconfig \
-  fonts-noto \
-  fonts-noto-cjk \
-  fonts-noto-color-emoji \
-  libnss3 \
-  libatk-bridge2.0-0 \
-  libatk1.0-0 \
-  libgtk-3-0 \
-  libcups2 \
-  libdrm2 \
-  libgbm1 \
-  libx11-xcb1 \
-  libxcomposite1 \
-  libxdamage1 \
-  libxrandr2 \
-  libxss1 \
-  libxtst6 \
-  libasound2 \
-  xdg-utils \
-  && rm -rf /var/lib/apt/lists/*
+# Copy fontconfig binary + config
+COPY --from=fontstage /usr/bin/fc-cache /usr/bin/fc-cache
+COPY --from=fontstage /etc/fonts /etc/fonts
+
+# Copy only the libraries fc-cache needs (Alpine puts them in /usr/lib)
+# This is still a set, but much safer than copying /usr/lib blindly when paths differ.
+COPY --from=fontstage /usr/lib/libfontconfig.so* /usr/lib/
+COPY --from=fontstage /usr/lib/libfreetype.so* /usr/lib/
+COPY --from=fontstage /usr/lib/libexpat.so* /usr/lib/
+COPY --from=fontstage /usr/lib/libbz2.so* /usr/lib/
+COPY --from=fontstage /usr/lib/libpng16.so* /usr/lib/
+COPY --from=fontstage /usr/lib/libbrotlidec.so* /usr/lib/
+COPY --from=fontstage /usr/lib/libbrotlicommon.so* /usr/lib/
+COPY --from=fontstage /usr/lib/libz.so* /usr/lib/
 
 # Your fonts
 RUN mkdir -p /home/node/.local/share/fonts
 COPY fonts/ /home/node/.local/share/fonts/
 RUN chown -R node:node /home/node/.local
 
-# Install the n8n Puppeteer community node
+# Install Chromium + common runtime deps/fonts (Alpine-based image)
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont \
+  font-noto \
+  font-noto-cjk
+
+# Install the n8n Puppeteer community node into the n8n user folder
+# n8n loads community nodes from: /home/node/.n8n/nodes
 RUN mkdir -p /home/node/.n8n/nodes \
   && cd /home/node/.n8n/nodes \
   && npm install n8n-nodes-puppeteer \
   && chown -R node:node /home/node/.n8n
 
-# Rebuild font cache
+# Rebuild font cache (now fc-cache exists)
 RUN fc-cache -f -v
-
-# Help Puppeteer find Chromium (path may vary; see note below)
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 USER node
 VOLUME ["/home/node/.n8n"]
