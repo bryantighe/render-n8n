@@ -27,6 +27,24 @@ RUN mkdir -p /home/node/.local/share/fonts
 COPY fonts/ /home/node/.local/share/fonts/
 RUN chown -R node:node /home/node/.local
 
+# Install Chromium + common runtime deps/fonts (Alpine-based image)
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont \
+  font-noto \
+  font-noto-cjk
+
+# Install the n8n Puppeteer community node into the n8n user folder
+# n8n loads community nodes from: /home/node/.n8n/nodes
+RUN mkdir -p /home/node/.n8n/nodes \
+  && cd /home/node/.n8n/nodes \
+  && npm install n8n-nodes-puppeteer \
+  && chown -R node:node /home/node/.n8n
+
 # Rebuild font cache (now fc-cache exists)
 RUN fc-cache -f -v
 
