@@ -1,6 +1,14 @@
 # Stage 1: grab fontconfig + deps from Alpine
 FROM alpine:latest AS fontstage
-RUN apk add --no-cache fontconfig
+RUN apk add --no-cache fontconfig \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont \
+  font-noto \
+  font-noto-cjk
 
 # Stage 2: keep n8n on latest
 FROM docker.n8n.io/n8nio/n8n:latest
@@ -27,16 +35,7 @@ RUN mkdir -p /home/node/.local/share/fonts
 COPY fonts/ /home/node/.local/share/fonts/
 RUN chown -R node:node /home/node/.local
 
-# Install Chromium + common runtime deps/fonts (Alpine-based image)
-RUN apk add --no-cache \
-  chromium \
-  nss \
-  freetype \
-  harfbuzz \
-  ca-certificates \
-  ttf-freefont \
-  font-noto \
-  font-noto-cjk
+
 
 # Install the n8n Puppeteer community node into the n8n user folder
 # n8n loads community nodes from: /home/node/.n8n/nodes
