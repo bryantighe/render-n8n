@@ -15,6 +15,17 @@ FROM docker.n8n.io/n8nio/n8n:latest
 
 USER root
 
+# ---- Install wkhtmltopdf ----
+ARG WKHTML_VER=0.12.6-1
+RUN set -eux; \
+  mkdir -p /opt/wkhtmltopdf; \
+  cd /opt/wkhtmltopdf; \
+  wget -O wkhtmltox.tar.xz \
+    "https://github.com/wkhtmltopdf/packaging/releases/download/${WKHTML_VER}/wkhtmltox_${WKHTML_VER}.linux-generic-amd64.tar.xz"; \
+  tar -xf wkhtmltox.tar.xz --strip-components=1; \
+  ln -sf /opt/wkhtmltopdf/bin/wkhtmltopdf /usr/local/bin/wkhtmltopdf; \
+  wkhtmltopdf --version
+
 # Copy fontconfig binary + config
 COPY --from=fontstage /usr/bin/fc-cache /usr/bin/fc-cache
 COPY --from=fontstage /etc/fonts /etc/fonts
